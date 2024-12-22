@@ -54,6 +54,8 @@ public class PlayerShooter : MonoBehaviour {
     private void OnAnimatorIK(int layerIndex) {
         gunPivot.position = playerAnimator.GetIKHintPosition(AvatarIKHint.RightElbow); // 총의 기준점을 오른쪽 팔꿈치 위치로
 
+
+
         playerAnimator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1.0f); // 왼손 위치를 지정
         playerAnimator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1.0f); // 왼손 회전을 지정
         playerAnimator.SetIKPosition(AvatarIKGoal.LeftHand, leftHandMount.position); // 왼손의 위치를 왼손잡이의 위치로
