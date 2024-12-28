@@ -46,9 +46,40 @@ public class EnemySpawner : MonoBehaviour {
 
     // 현재 웨이브에 맞춰 적을 생성
     private void SpawnWave() {
+        wave++;
+        int spawnCount = Mathf.RoundToInt(wave * 1.5f); // 웨이브의 1.5배를 반올림한 수만큼 적 생성
+        for (int i = 0; i < spawnCount; i++)
+        {
+            float enemyIntensity = Random.Range(0f, 1f); // 적의 세기를 0%에서 100% 사이로 조정
+            // 적 생성
+            CreateEnemy(enemyIntensity);
+        }
     }
 
     // 적을 생성하고 생성한 적에게 추적할 대상을 할당
     private void CreateEnemy(float intensity) {
+        float health = Mathf.Lerp(healthMin, healthMax, intensity); // 체력
+        float damage = Mathf.Lerp(damageMin, damageMax, intensity); // 공격력
+        float speed = Mathf.Lerp(speedMin, speedMax, intensity); // 이동 속도
+        Color skinColor = Color.Lerp(Color.white, strongEnemyColor, intensity); // 피부색은 흰색에서 강해질수록 붉게
+        Transform spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)]; // 소환 위치
+        Enemy enemy = Instantiate(enemyPrefab, spawnPoint.position, spawnPoint.rotation); // 적 생성
+        enemy.Setup(health, damage, speed, skinColor); // 적 설정
+        enemies.Add(enemy); // 생성된 적을 리스트에 추가
+        enemy.onDeath += () => OnEnemyDeath(enemy);
+        enemy.onDeath += () => DestroyEnemy(enemy);
+        enemy.onDeath += () => AddScore();
+    }
+
+    private void OnEnemyDeath(Enemy enemy) {
+        enemies.Remove(enemy);
+    }
+
+    private void DestroyEnemy(Enemy enemy) {
+        Destroy(enemy.gameObject, 10f);
+    }
+
+    private void AddScore() {
+        GameManager.instance.AddScore(100);
     }
 }
