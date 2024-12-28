@@ -39,10 +39,19 @@ public class Enemy : LivingEntity {
 
     private void Awake() {
         // 초기화
+        pathFinder = GetComponent<NavMeshAgent>();
+        enemyAnimator = GetComponent<Animator>();
+        enemyAudioPlayer = GetComponent<AudioSource>();
+        enemyRenderer = GetComponentInChildren<Renderer>(); // 렌더러 컴포넌트는 자식 오브젝트에 있으므로 GetComponetInChildren()로 찾는다.
     }
 
     // 적 AI의 초기 스펙을 결정하는 셋업 메서드
     public void Setup(float newHealth, float newDamage, float newSpeed, Color skinColor) {
+        startingHealth = newHealth;
+        health = newHealth;
+        damage = newDamage;
+        pathFinder.speed = newSpeed;
+        enemyRenderer.material.color = skinColor;   
     }
 
     private void Start() {
@@ -60,6 +69,21 @@ public class Enemy : LivingEntity {
         // 살아있는 동안 무한 루프
         while (!dead)
         {
+            if(hasTarget){
+                pathFinder.isStopped = false;
+                pathFinder.SetDestination(targetEntity.transform.position);
+            }
+            else{
+                pathFinder.isStopped = true;
+                Collider[] colliders = Physics.OverlapSphere(transform.position, 10f, whatIsTarget); // 중심위치와 반지름을 입력받아, 반경 내에 있는 모든 콜라이더를 배열로 반환
+                for(int i = 0; i < colliders.Length; i++){
+                    LivingEntity livingEntity = colliders[i].GetComponent<LivingEntity>();
+                    if(livingEntity != null && !livingEntity.dead){
+                        targetEntity = livingEntity;
+                        break;
+                    }
+                }
+            }
             // 0.25초 주기로 처리 반복
             yield return new WaitForSeconds(0.25f);
         }
@@ -67,6 +91,13 @@ public class Enemy : LivingEntity {
 
     // 데미지를 입었을때 실행할 처리
     public override void OnDamage(float damage, Vector3 hitPoint, Vector3 hitNormal) {
+        if(!dead){
+            // 피격 파티클 효과 재생
+            hitEffect.transform.position = hitPoint; // 공격받은 지점
+            hitEffect.transform.rotation = Quaternion.LookRotation(hitNormal); // 공격받은 방향
+            hitEffect.Play();
+            enemyAudioPlayer.PlayOneShot(hitSound);
+        }
         // LivingEntity의 OnDamage()를 실행하여 데미지 적용
         base.OnDamage(damage, hitPoint, hitNormal);
     }
@@ -75,9 +106,27 @@ public class Enemy : LivingEntity {
     public override void Die() {
         // LivingEntity의 Die()를 실행하여 기본 사망 처리 실행
         base.Die();
+
+        Collider[] enemyColliders = GetComponents<Collider>(); // 자신의 모든 콜라이더 컴포넌트 배열
+        for(int i = 0; i < enemyColliders.Length; i++){
+            enemyColliders[i].enabled = false; // 싹다 끈다
+        }
+        pathFinder.isStopped = true;
+        pathFinder.enabled = false;
+        enemyAnimator.SetTrigger("Die");
+        enemyAudioPlayer.PlayOneShot(deathSound);
     }
 
     private void OnTriggerStay(Collider other) {
         // 트리거 충돌한 상대방 게임 오브젝트가 추적 대상이라면 공격 실행   
+        if(!dead && Time.time >= lastAttackTime + timeBetAttack){
+            LivingEntity attackTarget = other.GetComponent<LivingEntity>();
+            if(attackTarget != null && attackTarget == targetEntity){
+                lastAttackTime = Time.time;
+                Vector3 hitPoint = other.ClosestPoint(transform.position); // 적과 상대방의 가장 가까운 점
+                Vector3 hitNormal = transform.position - other.transform.position; // 적과 상대방의 법선 벡터
+                attackTarget.OnDamage(damage, hitPoint, hitNormal);
+            }
+        }
     }
 }
