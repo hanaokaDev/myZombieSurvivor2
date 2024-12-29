@@ -4,7 +4,7 @@ using UnityEngine.AI; // 내비메쉬 관련 코드
 // 주기적으로 아이템을 플레이어 근처에 생성하는 스크립트
 public class ItemSpawner : MonoBehaviour {
     public GameObject[] items; // 생성할 아이템들
-    public Transform playerTransform; // 플레이어의 트랜스폼
+    public Transform playerTransform; // 플레이어의 트랜스폼(위치)
 
     public float maxDistance = 5f; // 플레이어 위치로부터 아이템이 배치될 최대 반경
 

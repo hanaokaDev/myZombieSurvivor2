@@ -18,4 +18,9 @@ public class HealthPack : MonoBehaviour, IItem {
         // 사용되었으므로, 자신을 파괴
         Destroy(gameObject);
     }
+
+    private void Update() {
+        // HealthPack의 Update 로직
+        Debug.Log("HealthPack Update");
+    }
 }
