@@ -56,5 +56,6 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "myZombieSurvivor2.sln"
+    // "dotnet.defaultSolution": "myZombieSurvivor2.sln"
+    "dotnet.defaultSolution": "zombieSurvivor.sln"
 }
